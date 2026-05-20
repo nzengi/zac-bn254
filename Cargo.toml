@@ -5,7 +5,8 @@ members  = ["crates/zac", "crates/zac-cli"]
 [workspace.package]
 version      = "0.1.0"
 edition      = "2021"
-license      = "MIT"
+license      = "LicenseRef-Proprietary"
+publish      = false
 authors      = ["nzengi <zenginureddin1@gmail.com>"]
 # MSRV — verified via `cargo +1.89 check --workspace`. The 1.74 claim that
 # preceded Phase 5 was aspirational: transitive deps (clap_lex 1.1.0) require
@@ -13,7 +14,7 @@ authors      = ["nzengi <zenginureddin1@gmail.com>"]
 # 1.89 is the lowest installed toolchain that builds the workspace clean and
 # is the floor we commit to in CI.
 rust-version = "1.89"
-repository   = "https://github.com/nzengi/zac"
+repository   = "https://github.com/nzengi/zac-bn254"
 
 [workspace.dependencies]
 # binary I/O

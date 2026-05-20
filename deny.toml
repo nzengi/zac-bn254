@@ -32,8 +32,18 @@ allow = [
     "Zlib",
     "BSD-2-Clause",
     "MPL-2.0",
+    # Workspace-owned crates (zac, zac-cli) declare this SPDX
+    # LicenseRef. The full text is in /LICENSE; cargo-deny does not
+    # parse the file, only matches the identifier.
+    "LicenseRef-Proprietary",
 ]
 confidence-threshold = 0.93
+
+# Private workspace crates are also exempt regardless — the
+# `publish = false` flag in [workspace.package] makes them
+# non-publishable and `private.ignore = true` mirrors that policy
+# in cargo-deny.
+private = { ignore = true }
 
 [advisories]
 yanked = "deny"

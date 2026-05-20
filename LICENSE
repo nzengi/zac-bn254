@@ -1,0 +1,203 @@
+ZAC — PROPRIETARY LICENSE
+
+Copyright (c) 2026 (nzengi <howyaniii@gmail.com>).
+All rights reserved.
+
+ZAC (the "Software") includes, without limitation, the source code
+in this repository, the binary format specifications under `docs/`,
+the test fixtures under `fixtures/`, the benchmark baselines, the
+build scripts, and every accompanying file. The Software is the
+exclusive intellectual property of the copyright holder named above
+and is provided to no party except under prior written permission.
+
+
+1. NO LICENSE IS GRANTED BY ACCESS
+
+The visibility of this repository on any hosting platform
+(including but not limited to GitHub) does NOT constitute a license,
+permission, or grant of any kind. The terms of service of such a
+platform that allow a viewer to fetch the repository for the
+viewer's own browsing do NOT confer any right in the Software.
+
+Cloning, forking, mirroring, downloading, archiving, scraping,
+caching, indexing, ingesting, embedding, or otherwise copying this
+repository or any part of it, with or without modification, in any
+medium, requires prior written permission from the copyright holder.
+The mere ability to perform such an operation does not imply
+permission to do so.
+
+
+2. PROHIBITED USES
+
+Without prior written permission from the copyright holder, you do
+NOT have the right to do any of the following, and any such act is
+a violation of this license and of applicable copyright law:
+
+  (a) USE — for any purpose, whether commercial, academic, personal,
+      evaluative, internal, exploratory, or otherwise, and whether
+      or not a fee is charged.
+
+  (b) COPY OR REDISTRIBUTE — including but not limited to forking,
+      mirroring, re-publishing, packaging, vendoring, embedding,
+      bundling, or hosting the Software in whole or in part, in any
+      form, by any means.
+
+  (c) MODIFY — including but not limited to translating, porting,
+      adapting, decompiling, reverse-engineering, refactoring,
+      annotating, or creating derivative works based on the Software.
+
+  (d) TRAIN OR FEED ANY AI/ML SYSTEM — including but not limited to
+      training, pre-training, fine-tuning, distillation, evaluation,
+      benchmarking, prompting, embedding-generation, retrieval
+      augmentation, in-context learning, or any other form of
+      ingestion of the Software (source code, comments,
+      documentation, format specifications, fixtures, benchmark
+      outputs, error messages, log output, or any subset thereof)
+      into any artificial intelligence system, machine-learning
+      model, generative model, large language model, code-completion
+      engine, code-synthesis tool, automated programming agent, or
+      any analogous system, whether public or private, hosted or
+      local, free or paid. This prohibition binds natural persons
+      acting through such systems as well as the operators of those
+      systems.
+
+  (e) PUBLISH AI OUTPUT — distribute, publish, share, deploy, or
+      otherwise release any output produced by an AI/ML system that
+      was trained, fine-tuned, conditioned, prompted, retrieved
+      against, or otherwise influenced by the Software or any
+      derivative of it.
+
+  (f) STRIP IDENTIFIERS — remove, alter, obscure, or bypass this
+      notice, the copyright headers in source files, the BLAKE3
+      domain-separation tags in the binary format
+      (`zac1.file.v1\0`, `zac1.vkey.v1\0`, `zac1.r1cs.v1\0`), the
+      `ZAC1` and `ZAP1` magic bytes, or any other identifier that
+      links code, data, or wire artifacts to this project.
+
+  (g) CIRCUMVENT — bypass, defeat, or work around any of the above
+      restrictions by indirect means, including by routing access
+      through an intermediary, a third party, or an automated agent.
+
+
+3. PERMISSION
+
+Any of the acts described in section 2 require PRIOR WRITTEN
+PERMISSION from the copyright holder. To request permission, write
+to:
+
+    nzengi <zenginureddin1@gmail.com>
+
+Permission, when granted, is:
+
+  - explicit, in writing, and signed;
+  - scoped to the specific use, party, purpose, and term stated in
+    the grant;
+  - non-transferable; a grant to one party does not extend to its
+    affiliates, successors, contractors, customers, or AI systems;
+  - revocable at the sole discretion of the copyright holder, with
+    or without cause, on written notice;
+  - subject to any further terms the copyright holder attaches in
+    the grant itself (including but not limited to royalties,
+    attribution, audit rights, or field-of-use restrictions).
+
+Silence is not consent. Absence of an explicit refusal is not
+consent. Absence of enforcement against a third party is not
+consent and is not a waiver against any other party.
+
+
+4. OBLIGATIONS ON UNAUTHORIZED ACCESS
+
+If you have accessed the Software without prior written permission,
+you must, without delay:
+
+  (a) cease all use of the Software, including any copy, cache,
+      mirror, fork, derivative, or AI training corpus;
+
+  (b) delete every copy of the Software in your possession or
+      control, including copies held by services or contractors
+      acting on your behalf, and including any derivative works;
+
+  (c) confirm such deletion in writing to the contact in section 3,
+      identifying each copy by location and date of deletion; and
+
+  (d) refrain from any further access to the Software unless and
+      until written permission has been obtained.
+
+
+5. NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-
+INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR
+ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE, AUTHORIZED OR UNAUTHORIZED.
+
+The disclaimer of warranty applies whether or not the copyright
+holder has been advised of the possibility of such damages, and
+notwithstanding the failure of essential purpose of any limited
+remedy.
+
+
+6. REMEDIES
+
+Unauthorized use of the Software constitutes copyright infringement
+and may also constitute breach of contract, violation of
+computer-misuse statutes, violation of trade-secret law, unfair
+competition, and tortious interference, depending on the
+jurisdiction and the conduct.
+
+The copyright holder reserves all remedies available under
+applicable law, including without limitation:
+
+  - injunctive relief and specific performance, on an expedited
+    basis where available;
+  - actual damages and disgorgement of profits;
+  - statutory damages and attorneys' fees where statute provides
+    for them;
+  - takedown notices to hosting platforms, package registries,
+    search engines, AI training providers, and AI model operators;
+  - cooperation with criminal authorities where the conduct
+    constitutes a criminal offense.
+
+Election of one remedy does not preclude any other.
+
+
+7. GOVERNING LAW AND JURISDICTION
+
+This notice is governed by the laws of the Republic of Türkiye
+without regard to its conflict-of-laws principles. The competent
+courts of Istanbul, Republic of Türkiye, have exclusive
+jurisdiction over any dispute arising out of or in connection with
+this notice or the Software. Where an act of infringement occurs
+outside Türkiye, the copyright holder may, at its sole option,
+enforce its rights under the copyright laws and the contract,
+tort, and computer-misuse laws of the jurisdiction in which the
+act occurred.
+
+
+8. SEVERABILITY AND ENTIRE NOTICE
+
+If any provision of this notice is held to be unenforceable in a
+jurisdiction, the remaining provisions remain in full effect in
+that jurisdiction, and every provision remains in full effect in
+all other jurisdictions. The unenforceable provision is to be
+construed to give effect to its intent to the fullest extent
+permitted by law.
+
+This file is the entire notice between you and the copyright
+holder concerning the Software. No oral statement, prior writing,
+or course of conduct modifies it. Modifications require a signed
+writing from the copyright holder.
+
+
+9. CONTACT
+
+Permissions, takedowns, and any other matter under this notice:
+
+    nzengi <howyaniii@gmail.com>
+
+
+End of notice.
