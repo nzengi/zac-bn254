@@ -1,11 +1,15 @@
 # zac-bn254
 
 [![Crates.io](https://img.shields.io/crates/v/zac-bn254.svg)](https://crates.io/crates/zac-bn254)
+[![docs.rs](https://img.shields.io/docsrs/zac-bn254.svg)](https://docs.rs/zac-bn254)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
 
-A binary container format and Rust toolchain for Groth16 BN254
-zk-SNARK proofs. Built so that a verifier does not have to ship
-snarkjs and a Node runtime alongside it.
+The canonical wire format for `snarkjs`-compatible Groth16 BN254 proofs,
+without the JavaScript runtime. `zac-bn254` is the binding-checked,
+byte-typed container that lets a Rust service, an iOS or Android build,
+an embedded verifier, or a CI runner consume a Groth16 BN254 proof
+without shelling out to `snarkjs` — and cross-verifies with `snarkjs`
+in both directions on every push.
 
 ## Why
 

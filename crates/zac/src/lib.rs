@@ -1,28 +1,67 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
-//! ZAC — Groth16 BN254 artifact container (v1.0).
+//! Canonical wire format for `snarkjs`-compatible Groth16 BN254 proofs,
+//! without the JavaScript runtime.
 //!
-//! v1.0 implements **only** Groth16 over BN254. Additional proof systems
+//! `zac-bn254` is the binding-checked, byte-typed container that lets a
+//! Rust service, an iOS or Android build, an embedded verifier, or a CI
+//! runner consume a Groth16 BN254 proof without shelling out to
+//! `snarkjs` or carrying a 200 MB Node install. The wire format is
+//! defined in `docs/SPEC.md` (normative) and is reproduced bit-for-bit
+//! by the reference implementation here; round-trip cross-verification
+//! with `snarkjs` is gated on every push by
+//! `node-tools/scripts/cross_verify.mjs`.
+//!
+//! # Quick start
+//!
+//! Verifying a proof is a single call once you have the two byte
+//! slices. This example is a runnable doctest: the multiplier fixture
+//! is embedded in the crate so `cargo test --doc -p zac-bn254` actually
+//! exercises the verifier.
+//!
+//! ```
+//! use zac::{verify, ZacFile, ZacProofFile};
+//!
+//! let zac_bytes  = include_bytes!("../tests/fixtures/multiplier.zac");
+//! let zacp_bytes = include_bytes!("../tests/fixtures/multiplier.zacp");
+//!
+//! let zac  = ZacFile::parse(zac_bytes)?;
+//! let zacp = ZacProofFile::parse(zacp_bytes)?;
+//! verify(&zac, &zacp)?;
+//! # Ok::<(), zac::ZacError>(())
+//! ```
+//!
+//! `verify` returns `Ok(())` for a valid proof, [`ZacError::ProofRejected`]
+//! (E017) when the Groth16 pairing equation does not hold, and the precise
+//! `E001..E018` code from `docs/SPEC.md` §10 for any structural failure
+//! (truncated, non-canonical, off-curve / off-subgroup, identity at a
+//! forbidden position, …). See [`error::ZacError`] for the full taxonomy
+//! and `docs/ERROR-CODES.md` for the long-form registry.
+//!
+//! # Scope
+//!
+//! v0.1 implements **only** Groth16 over BN254. Additional proof systems
 //! and curves (BLS12-381, Halo2, PLONK, FFLonk) are out of scope and will
-//! be considered in future major versions, not bolted onto v1.
+//! be considered in future major versions, not bolted onto v0.1.
 //!
-//! The wire format is defined in `docs/SPEC.md`. Every byte of every section
-//! is parseable from the spec alone; there is no hidden invariant. Tracing
-//! logs at the `trace` level provide a byte-by-byte narrative for debugging.
+//! # Crate layout
 //!
-//! ## Phase 1 scope
+//! - [`ZacFile`] / [`ZacProofFile`] — parse + encode the two file types.
+//! - [`verify`] — the single end-to-end entry point. Runs every check in
+//!   SPEC order.
+//! - [`prove`] / [`prove_with_rng`] — the native Rust Groth16 prover,
+//!   matching `snarkjs`'s output byte-for-byte (1.16 ms on the multiplier
+//!   fixture).
+//! - [`groth16`] — the crypto boundary: canonical-compressed `ark-bn254`
+//!   decode, identity rejection, subgroup membership, Fr canonical check.
+//! - [`error::ZacError`] — every spec-level error code with full
+//!   structured context (offsets, section types, byte indices).
 //!
-//! Phase 1 implemented pure **parse + encode** round-tripping with every
-//! SPEC-level structural invariant enforced. The VKEY body and the `.zacp`
-//! proof block were kept as opaque byte slices.
+//! # Tracing
 //!
-//! ## Phase 2 scope
-//!
-//! Phase 2 wraps those opaque byte slices with `ark-bn254 0.4` canonical
-//! parsing, runs the SPEC §6 binding checks (E009 / E013 / E014), the
-//! SPEC §7 subgroup checks (E010 / E011), the SPEC §8 Fr canonical check
-//! (E012), and finally runs the Groth16 pairing equation (E017 on
-//! rejection). The single entry point is [`verify`].
+//! Every parser and the verifier emit `trace`-level spans with byte
+//! offsets. Set `RUST_LOG=zac=trace` for a byte-by-byte narrative of any
+//! failure path.
 
 pub mod crc;
 pub mod error;

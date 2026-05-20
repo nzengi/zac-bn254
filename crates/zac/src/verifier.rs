@@ -41,6 +41,21 @@ use crate::zac_proof::ZacProofFile;
 /// Returns `Ok(())` iff every binding + structural check passes AND the
 /// Groth16 pairing equation holds. Otherwise the first failure surfaces as
 /// the most specific `E###` (see module docs for the order).
+///
+/// # Example
+///
+/// ```
+/// use zac::{verify, ZacFile, ZacProofFile};
+///
+/// let zac  = ZacFile::parse(include_bytes!("../tests/fixtures/multiplier.zac"))?;
+/// let zacp = ZacProofFile::parse(include_bytes!("../tests/fixtures/multiplier.zacp"))?;
+/// verify(&zac, &zacp)?;
+/// # Ok::<(), zac::ZacError>(())
+/// ```
+///
+/// On rejection the returned error carries the offset and field name. A
+/// typical incident-response loop logs `err.code()` (`"E017"`, `"E010"`,
+/// …) alongside the structured `Debug` output and grep-checks the spec.
 #[instrument(level = "trace", skip(zac, proof))]
 pub fn verify(zac: &ZacFile, proof: &ZacProofFile) -> ZacResult<()> {
     trace!("verify: step 1 — locate VKEY + INTERFACE sections");

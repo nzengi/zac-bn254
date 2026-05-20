@@ -1,0 +1,10 @@
+{
+  "spec_version": "1.0",
+  "description": "Gold reproducibility corpus for the zac-bn254 wire format. A conforming second implementation MUST produce byte-identical .zac and .zacp files for the inputs declared in each vector's vector.json.",
+  "vectors": [
+    "mul-default",
+    "mul-z-zero",
+    "mul-z-max",
+    "mul-alt-setup"
+  ]
+}

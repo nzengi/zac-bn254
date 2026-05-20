@@ -1,0 +1,26 @@
+{
+  "description": "Same circuit + witness as mul-default but a different trusted-setup seed; pins that VKEY changes propagate to file_hash and vk_fingerprint.",
+  "expected": {
+    "r1cs_hash": "15ed654796e6ce7a9a4859ee9f9b27fb251b1b1cc8061371450ac9b91977e6c6",
+    "vk_fingerprint": "dcb37c3ac1657a7b45880a77dd5c850db130bb06370d5b58e33bcf7cd6585896",
+    "vkey_size": 296,
+    "zac_file_hash": "587daf8e5da80db329ebae439b363ff977a6bcc3f961733ec8d5118091ced40a",
+    "zac_size": 456,
+    "zacp_size": 240
+  },
+  "files": {
+    "zac": "mul-alt-setup.zac",
+    "zacp": "mul-alt-setup.zacp"
+  },
+  "inputs": {
+    "public_input_count": 1,
+    "r1cs_label": "phase2-placeholder:mul-x*y=z",
+    "setup_seed": "0xdeadbeeff00dbabe",
+    "witness": {
+      "x_le_hex": "0300000000000000000000000000000000000000000000000000000000000000",
+      "y_le_hex": "0b00000000000000000000000000000000000000000000000000000000000000",
+      "z_le_hex": "2100000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "name": "mul-alt-setup"
+}

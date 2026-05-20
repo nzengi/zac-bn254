@@ -27,6 +27,18 @@ impl ZacFile {
     /// On success every spec-level invariant has been enforced *except* the
     /// Phase 2 cryptographic checks (subgroup, Fr canonical). The trailer
     /// `file_hash` is recomputed and compared (E009 on mismatch).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use zac::ZacFile;
+    ///
+    /// let bytes = include_bytes!("../tests/fixtures/multiplier.zac");
+    /// let zac = ZacFile::parse(bytes)?;
+    /// assert_eq!(zac.header.version_major, 1);
+    /// assert_eq!(zac.sections.len(), 3); // VKEY + INTERFACE + R1CS_HASH
+    /// # Ok::<(), zac::ZacError>(())
+    /// ```
     #[instrument(level = "trace", skip(bytes), fields(len = bytes.len()))]
     pub fn parse(bytes: &[u8]) -> ZacResult<Self> {
         trace!("parse: begin");

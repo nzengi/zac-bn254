@@ -1,0 +1,26 @@
+{
+  "description": "Edge: zero public input. x=0, y=42, z=0. Exercises Fr::zero() canonical encoding.",
+  "expected": {
+    "r1cs_hash": "15ed654796e6ce7a9a4859ee9f9b27fb251b1b1cc8061371450ac9b91977e6c6",
+    "vk_fingerprint": "2112356fef0e22e2d3997d18b9f31962e259f2a64c50b725ca7f95cb0c4baad2",
+    "vkey_size": 296,
+    "zac_file_hash": "124bc3f6cb793e10666e969f5f81ac5fbf18c567b188df0fbb6cc8b4f2cd305b",
+    "zac_size": 456,
+    "zacp_size": 240
+  },
+  "files": {
+    "zac": "mul-z-zero.zac",
+    "zacp": "mul-z-zero.zacp"
+  },
+  "inputs": {
+    "public_input_count": 1,
+    "r1cs_label": "phase2-placeholder:mul-x*y=z",
+    "setup_seed": "0x05eedc0ffeef0007",
+    "witness": {
+      "x_le_hex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "y_le_hex": "2a00000000000000000000000000000000000000000000000000000000000000",
+      "z_le_hex": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "name": "mul-z-zero"
+}

@@ -32,13 +32,17 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
 
   test:
-    name: test
+    name: test (unit + integration + doctest)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: cargo test
+        # Covers unit tests, integration tests under `tests/`, and the
+        # doctests on the public API (`verify`, `ZacFile::parse`,
+        # `ZacProofFile::parse`, plus the top-level lib.rs quick-start).
+        # `cargo test --workspace` runs all three by default.
         run: cargo test --workspace
 
   forgery:

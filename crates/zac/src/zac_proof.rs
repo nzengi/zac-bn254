@@ -50,6 +50,18 @@ pub struct ZacProofFile {
 
 impl ZacProofFile {
     /// Parse a `.zacp` byte stream.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use zac::ZacProofFile;
+    ///
+    /// let bytes = include_bytes!("../tests/fixtures/multiplier.zacp");
+    /// let zacp = ZacProofFile::parse(bytes)?;
+    /// assert_eq!(zacp.header.public_input_count, 1);
+    /// assert_eq!(zacp.public_inputs.len(), 1);
+    /// # Ok::<(), zac::ZacError>(())
+    /// ```
     #[instrument(level = "trace", skip(bytes), fields(len = bytes.len()))]
     pub fn parse(bytes: &[u8]) -> ZacResult<Self> {
         trace!("parse zacp: begin");
