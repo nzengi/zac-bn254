@@ -104,7 +104,16 @@ pub fn decode_vk(bytes: &[u8]) -> ZacResult<DecodedVk> {
         "groth16::decode_vk: deserialize VK (Compress::Yes, Validate::No)"
     );
     let vk = VerifyingKey::<Bn254>::deserialize_with_mode(bytes, Compress::Yes, Validate::No)
-        .map_err(|e| classify_deser_err(&e, 0, "vkey"))?;
+        .map_err(|e| classify_deser_err(e, 0, "vkey"))?;
+
+    // SPEC §7: identity is forbidden on the four mandatory VK points. A VK
+    // with `delta_g2 = O` (etc.) makes the Groth16 pairing trivially satisfy
+    // for arbitrary proof inputs — soundness vector. Identity on
+    // `gamma_abc_g1[i]` IS permitted (SPEC §6.3 sparse-VKEY pattern).
+    reject_identity_g1(&vk.alpha_g1, 0, "vk.alpha_g1")?;
+    reject_identity_g2(&vk.beta_g2, 0, "vk.beta_g2")?;
+    reject_identity_g2(&vk.gamma_g2, 0, "vk.gamma_g2")?;
+    reject_identity_g2(&vk.delta_g2, 0, "vk.delta_g2")?;
 
     check_g1_subgroup(&vk.alpha_g1, 0, "vk.alpha_g1")?;
     check_g2_subgroup(&vk.beta_g2, 0, "vk.beta_g2")?;
@@ -138,17 +147,20 @@ pub fn decode_proof(bytes_128: &[u8; PROOF_BYTES]) -> ZacResult<DecodedProof> {
     let c_bytes = &bytes_128[G1_COMPRESSED_BYTES + G2_COMPRESSED_BYTES..];
 
     let a = G1Affine::deserialize_with_mode(a_bytes, Compress::Yes, Validate::No)
-        .map_err(|e| classify_deser_err(&e, OFFSET_PI_A, "pi_a"))?;
+        .map_err(|e| classify_deser_err(e, OFFSET_PI_A, "pi_a"))?;
+    reject_identity_g1(&a, OFFSET_PI_A, "pi_a")?;
     check_g1_subgroup(&a, OFFSET_PI_A, "pi_a")?;
     trace!(offset = OFFSET_PI_A, "groth16::decode_proof: pi_a ok");
 
     let b = G2Affine::deserialize_with_mode(b_bytes, Compress::Yes, Validate::No)
-        .map_err(|e| classify_deser_err(&e, OFFSET_PI_B, "pi_b"))?;
+        .map_err(|e| classify_deser_err(e, OFFSET_PI_B, "pi_b"))?;
+    reject_identity_g2(&b, OFFSET_PI_B, "pi_b")?;
     check_g2_subgroup(&b, OFFSET_PI_B, "pi_b")?;
     trace!(offset = OFFSET_PI_B, "groth16::decode_proof: pi_b ok");
 
     let c = G1Affine::deserialize_with_mode(c_bytes, Compress::Yes, Validate::No)
-        .map_err(|e| classify_deser_err(&e, OFFSET_PI_C, "pi_c"))?;
+        .map_err(|e| classify_deser_err(e, OFFSET_PI_C, "pi_c"))?;
+    reject_identity_g1(&c, OFFSET_PI_C, "pi_c")?;
     check_g1_subgroup(&c, OFFSET_PI_C, "pi_c")?;
     trace!(offset = OFFSET_PI_C, "groth16::decode_proof: pi_c ok");
 
@@ -242,12 +254,41 @@ fn ge_le(a: &[u8; 32], b: &[u8]) -> bool {
     true
 }
 
-fn check_g1_subgroup(p: &G1Affine, offset: usize, what: &'static str) -> ZacResult<()> {
+/// SPEC §7 — reject identity (point at infinity) at positions where the spec
+/// forbids it. Called at decode-time, BEFORE [`check_g1_subgroup`], because
+/// fail-fast at the most permissive layer gives the clearest error attribution
+/// and the cheapest check.
+///
+/// Identity is allowed on `gamma_abc_g1[i]` (sparse-VKEY pattern, SPEC §6.3),
+/// so this helper is wired in only for `pi_a`, `pi_c`, and `vk.alpha_g1`.
+fn reject_identity_g1(p: &G1Affine, offset: usize, what: &'static str) -> ZacResult<()> {
     if p.is_zero() {
-        // Point at infinity is in every subgroup by definition; arkworks'
-        // Validate::Yes already accepted it.
-        return Ok(());
+        trace!(offset, what, "rejecting: G1 identity (E018)");
+        return Err(ZacError::IdentityNotAllowed { offset, what });
     }
+    Ok(())
+}
+
+/// SPEC §7 — reject identity on `pi_b` and on the three mandatory G2 VK
+/// points (`beta_g2`, `gamma_g2`, `delta_g2`).
+fn reject_identity_g2(p: &G2Affine, offset: usize, what: &'static str) -> ZacResult<()> {
+    if p.is_zero() {
+        trace!(offset, what, "rejecting: G2 identity (E018)");
+        return Err(ZacError::IdentityNotAllowed { offset, what });
+    }
+    Ok(())
+}
+
+/// SPEC §7 — on-curve + prime-order subgroup membership.
+///
+/// Identity is **not** short-circuited here: SPEC §7 forbids identity on
+/// `pi_a, pi_b, pi_c, alpha_g1, beta_g2, gamma_g2, delta_g2`, and the
+/// rejection happens one layer up via [`reject_identity_g1`] /
+/// [`reject_identity_g2`]. For `gamma_abc_g1[i]` (the only legitimate
+/// identity-bearing position), the on-curve / subgroup invariants trivially
+/// hold for `O` and the arkworks predicates return `true`, so falling through
+/// here is correct.
+fn check_g1_subgroup(p: &G1Affine, offset: usize, what: &'static str) -> ZacResult<()> {
     if !p.is_on_curve() {
         trace!(offset, what, "rejecting: G1 point off-curve");
         return Err(ZacError::NonCanonicalPoint {
@@ -263,9 +304,6 @@ fn check_g1_subgroup(p: &G1Affine, offset: usize, what: &'static str) -> ZacResu
 }
 
 fn check_g2_subgroup(p: &G2Affine, offset: usize, what: &'static str) -> ZacResult<()> {
-    if p.is_zero() {
-        return Ok(());
-    }
     if !p.is_on_curve() {
         trace!(offset, what, "rejecting: G2 point off-curve");
         return Err(ZacError::NonCanonicalPoint {
@@ -280,34 +318,55 @@ fn check_g2_subgroup(p: &G2Affine, offset: usize, what: &'static str) -> ZacResu
     Ok(())
 }
 
-/// Map an arkworks `SerializationError` (or its underlying I/O failure) to
-/// one of our spec-level error codes. The arkworks 0.4 API does not let us
-/// inspect the discriminant directly from outside the crate, so we go
-/// through `Debug` formatting — coarse, but only used on the error path.
+/// Map an arkworks `SerializationError` to one of our spec-level error codes.
+///
+/// `ark-serialize 0.4.2` defines four variants and is not `#[non_exhaustive]`,
+/// so this match is exhaustive at the discriminant level. The mapping is:
+///
+/// | `SerializationError`            | `ZacError`           | Spec code |
+/// |---------------------------------|----------------------|-----------|
+/// | `NotEnoughSpace`                | `Truncated`          | E015      |
+/// | `InvalidData` / `UnexpectedFlags` | `NonCanonicalPoint` | E010      |
+/// | `IoError(io::Error)`            | `Io(io::Error)`      | E000      |
+///
+/// Earlier versions of this function pattern-matched on `format!("{:?}", e)`,
+/// which silently misclassified `NotEnoughSpace` (truncated input) to E010 and
+/// would have broken on any upstream change to `SerializationError`'s `Debug`
+/// impl. The discriminant match removes that fragility — see the snapshot
+/// test in `tests/classify_deser_err_snapshot.rs` for the contract.
 fn classify_deser_err(
-    e: &ark_serialize::SerializationError,
+    e: ark_serialize::SerializationError,
     offset: usize,
-    _what: &'static str,
+    what: &'static str,
 ) -> ZacError {
-    let msg = format!("{e:?}");
-    if msg.contains("InvalidData")
-        || msg.contains("NotCanonical")
-        || msg.contains("UnexpectedFlags")
-        || msg.contains("IoError")
-        || msg.contains("Io")
-    {
-        ZacError::NonCanonicalPoint {
-            offset,
-            reason: "arkworks: non-canonical / off-curve / bad flags",
+    use ark_serialize::SerializationError;
+    match e {
+        SerializationError::NotEnoughSpace => {
+            trace!(offset, what, "classify_deser_err: NotEnoughSpace → E015");
+            ZacError::Truncated {
+                offset,
+                need: 0,
+                have: 0,
+            }
         }
-    } else if msg.contains("InvalidSubgroup") || msg.contains("Subgroup") {
-        ZacError::SubgroupCheckFailed { offset }
-    } else {
-        // Default to E010 — "I don't know exactly which one, but it's
-        // structurally bad". Better than swallowing the error.
-        ZacError::NonCanonicalPoint {
-            offset,
-            reason: "arkworks: deserialization failure",
+        SerializationError::InvalidData | SerializationError::UnexpectedFlags => {
+            trace!(
+                offset,
+                what,
+                "classify_deser_err: InvalidData/UnexpectedFlags → E010"
+            );
+            ZacError::NonCanonicalPoint {
+                offset,
+                reason: "arkworks: invalid data or unexpected flags",
+            }
+        }
+        SerializationError::IoError(io_err) => {
+            trace!(
+                offset,
+                what,
+                "classify_deser_err: IoError → E000 passthrough"
+            );
+            ZacError::Io(io_err)
         }
     }
 }
@@ -345,5 +404,91 @@ mod tests {
         // fr should equal -1 mod r, i.e. Fr::from(-1) which equals
         // Fr::MODULUS - 1.
         assert_eq!(fr + Fr::from(1u64), Fr::zero());
+    }
+
+    // ---- classify_deser_err discriminant snapshot ----
+    //
+    // Pins the mapping from `ark_serialize::SerializationError` discriminants
+    // to `ZacError` codes. One `#[test]` per discriminant, so an upstream
+    // SerializationError change (e.g. arkworks adding a variant, or a Debug
+    // format tweak in 0.4.x) surfaces as a precise test failure rather than
+    // a silent miscategorisation.
+
+    use ark_serialize::SerializationError;
+
+    #[test]
+    fn classify_deser_not_enough_space_maps_to_e015() {
+        let err = classify_deser_err(SerializationError::NotEnoughSpace, 0x42, "test");
+        assert_eq!(err.code(), "E015");
+        assert!(
+            matches!(err, ZacError::Truncated { offset: 0x42, .. }),
+            "NotEnoughSpace must map to Truncated"
+        );
+    }
+
+    #[test]
+    fn classify_deser_invalid_data_maps_to_e010() {
+        let err = classify_deser_err(SerializationError::InvalidData, 0x42, "test");
+        assert_eq!(err.code(), "E010");
+        assert!(
+            matches!(err, ZacError::NonCanonicalPoint { offset: 0x42, .. }),
+            "InvalidData must map to NonCanonicalPoint"
+        );
+    }
+
+    #[test]
+    fn classify_deser_unexpected_flags_maps_to_e010() {
+        let err = classify_deser_err(SerializationError::UnexpectedFlags, 0x42, "test");
+        assert_eq!(err.code(), "E010");
+        assert!(
+            matches!(err, ZacError::NonCanonicalPoint { offset: 0x42, .. }),
+            "UnexpectedFlags must map to NonCanonicalPoint"
+        );
+    }
+
+    #[test]
+    fn classify_deser_io_error_passthroughs_to_e000() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "snapshot");
+        let err = classify_deser_err(SerializationError::IoError(io_err), 0x42, "test");
+        assert_eq!(err.code(), "E000");
+        assert!(
+            matches!(err, ZacError::Io(_)),
+            "IoError must pass through as ZacError::Io"
+        );
+    }
+
+    // ---- identity rejection snapshot ----
+    //
+    // Verifies the SPEC §7 contract: identity is rejected on the eight
+    // mandatory positions, but the `check_*_subgroup` helpers themselves
+    // no longer short-circuit on `is_zero()` (rejection happens one layer up
+    // at decode-time).
+
+    #[test]
+    fn reject_identity_g1_rejects_zero() {
+        let id = G1Affine::zero();
+        let err = reject_identity_g1(&id, 0x50, "pi_a").unwrap_err();
+        assert_eq!(err.code(), "E018");
+        assert!(matches!(
+            err,
+            ZacError::IdentityNotAllowed {
+                offset: 0x50,
+                what: "pi_a"
+            }
+        ));
+    }
+
+    #[test]
+    fn reject_identity_g2_rejects_zero() {
+        let id = G2Affine::zero();
+        let err = reject_identity_g2(&id, 0x70, "pi_b").unwrap_err();
+        assert_eq!(err.code(), "E018");
+        assert!(matches!(
+            err,
+            ZacError::IdentityNotAllowed {
+                offset: 0x70,
+                what: "pi_b"
+            }
+        ));
     }
 }

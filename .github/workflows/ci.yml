@@ -41,6 +41,37 @@ jobs:
       - name: cargo test
         run: cargo test --workspace
 
+  forgery:
+    name: forgery vectors (21 scenarios)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo run --example forgery_vectors
+        # exits non-zero if any of the 21 attack scenarios fails to reject
+        # with the expected error code(s). This gate was added in v0.1.1
+        # alongside the identity-rejection invariant — without it the new
+        # forgery cases would only exist as opt-in invocations rather than
+        # a contract enforced on every push.
+        run: cargo run --example forgery_vectors -p zac-bn254
+
+  semver:
+    name: semver-checks (patch compatibility)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: install cargo-semver-checks
+        run: cargo install cargo-semver-checks --locked
+      - name: cargo semver-checks
+        # Verifies the public API contract held against the previously
+        # published version on crates.io. Catches accidental breaking
+        # changes (signature shifts, enum exhaustiveness regressions) that
+        # would violate the 0.1.x patch promise.
+        run: cargo semver-checks check-release --workspace
+
   msrv:
     name: msrv (${{ env.ZAC_MSRV }})
     runs-on: ubuntu-latest

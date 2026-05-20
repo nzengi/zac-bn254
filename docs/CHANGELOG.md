@@ -1,10 +1,115 @@
 # Changelog
 
-## v1.0.1 — 2026-05-20
+## v0.1.1 — 2026-05-20
 
-Relicensed under MIT OR Apache-2.0 and prepared for publication on
-crates.io. No code or wire-format changes — the library, CLI, and SPEC
-are byte-identical to v1.0.0.
+Soundness hotfix. v0.1.0 silently accepted the identity (point at
+infinity) on proof and VK group elements where the Groth16 pairing
+equation is then trivially satisfied — a classical soundness anti-
+pattern. v0.1.1 rejects identity at decode-time on the seven mandatory
+positions and adds twelve new forgery vectors that pin the new
+invariant in CI.
+
+### Observable behavior changes
+
+These are behavior-tightening, not API-breaking, but a downstream
+test fixture that previously decoded an identity-bearing artifact will
+now see `E018`. Code reviewing for v0.1.1 should look for fixtures
+that test "identity is accepted" as a property, since those assertions
+need to flip.
+
+- **Identity rejection (new E018).** `pi_a`, `pi_b`, `pi_c`,
+  `vk.alpha_g1`, `vk.beta_g2`, `vk.gamma_g2`, and `vk.delta_g2` MUST
+  NOT be the point at infinity. The new error code is
+  `ZacError::IdentityNotAllowed`. `vk.gamma_abc_g1[i]` is exempted by
+  design — sparse VKEYs legitimately produce zero IC coefficients and
+  rejecting identity there would break interoperability with `snarkjs`
+  and `ark-circom`.
+- **`NotEnoughSpace` reclassification (E010 → E015).** The arkworks
+  `SerializationError::NotEnoughSpace` discriminant was being
+  classified as `E010 NonCanonicalPoint` via a `Debug` string match.
+  v0.1.1 rewrites the classifier as an exhaustive discriminant match
+  on the four real variants of `ark_serialize 0.4.2`'s
+  `SerializationError`. `NotEnoughSpace` now correctly maps to
+  `E015 TruncatedInput`. A downstream that pattern-matched on `E010`
+  to detect truncation will need to switch to `E015`. (The previous
+  classifier also had two dead branches matching variant names that
+  do not exist in arkworks 0.4 — `NotCanonical` and `InvalidSubgroup` —
+  which is how the misclassification stayed hidden.)
+
+### New forgery vectors
+
+`cargo run --example forgery_vectors` now exercises 21 attack
+scenarios, up from 8 in v0.1.0. The additions:
+
+| # | Scenario                                              | Code |
+|---|-------------------------------------------------------|------|
+| 9 | `pi_a` = identity (G1 zero)                           | E018 |
+| 10| `pi_b` = identity (G2 zero)                           | E018 |
+| 11| `pi_c` = identity (G1 zero)                           | E018 |
+| 12| `vk.alpha_g1` = identity                              | E018 |
+| 13| `vk.beta_g2` = identity                               | E018 |
+| 14| `vk.gamma_g2` = identity                              | E018 |
+| 15| `vk.delta_g2` = identity                              | E018 |
+| 16| `vk.beta_g2` = off-subgroup G2                        | E011 |
+| 17| `vk.delta_g2` = off-subgroup G2                       | E011 |
+| 18| public input = `r + 1` (modulus +1 boundary)          | E012 |
+| 19| `.zacp` truncated mid-public-input                    | E015 |
+| 20| `.zac` section index with overlap                     | E005 |
+| 21| `.zac` section size = `u32::MAX` (overflow)           | E005 / E008 / E015 |
+
+### Spec changes
+
+- §7.1 (new subsection) — identity rejection contract on the seven
+  forbidden positions, with the explicit sparse-VKEY exemption.
+- §10 — `E018` row added, vendor-redefinition range extended to
+  `E001..E018`, new normative note pinning truncation conditions to
+  `E015`.
+- `docs/ERROR-CODES.md` (new) — long-form companion to §10 listing
+  the trigger, file type, parse stage, and severity class for every
+  code.
+
+### Test additions
+
+- Snapshot tests for `classify_deser_err`, one `#[test]` per
+  `SerializationError` discriminant, so an upstream `Debug`-format or
+  variant change surfaces as a precise failure.
+- Snapshot tests for `reject_identity_g1` / `reject_identity_g2`
+  rejecting `G1Affine::zero()` / `G2Affine::zero()` with `E018`.
+- `from_e_code("E018")` round-trip in the error registry test.
+
+### Implementation notes
+
+- `ZacError` already carried `#[non_exhaustive]`, so adding
+  `IdentityNotAllowed` is SemVer-safe for downstream `match`
+  exhaustiveness.
+- `check_g{1,2}_subgroup` no longer short-circuits on `is_zero()`.
+  The previous comment in the source ("Point at infinity is in every
+  subgroup by definition") was algebraically correct but soundness-
+  unsafe; with identity now rejected one layer above (in
+  `reject_identity_g{1,2}` at `decode_vk` / `decode_proof`),
+  short-circuiting in the subgroup helpers became unnecessary and
+  potentially misleading.
+
+### Cross-verify and benches
+
+`bash scripts/e2e_demo.sh` and `npm run cross-verify` continue to pass
+unchanged. The 60k-case proptest corpus is unmodified (parse never
+panics regardless of identity). Bench numbers move by less than the
+measurement floor (sub-percent), as the new identity check is two
+`is_zero()` field comparisons per group element.
+
+## v0.1.0 — 2026-05-20
+
+First public release on crates.io as `zac-bn254` (library) and
+`zac-cli` (CLI). Dual-licensed MIT OR Apache-2.0.
+
+### Relicensing note (pre-publish)
+
+This crate was developed under a strict proprietary license and
+relicensed to MIT OR Apache-2.0 immediately before the first crates.io
+publish. The original v1.0.0 changelog entry below documents the
+release content; this section documents the licensing change that
+made publication possible.
 
 The earlier proprietary terms had a defensible purpose, but they were
 the wrong call for what the project is actually for. The point of a
@@ -42,9 +147,7 @@ dual license does not. That is a trade-off I am making deliberately
 in exchange for the project being something a downstream Rust ZK
 project can actually adopt.
 
-## v1.0.0 — 2026-05-20
-
-First public release of ZAC.
+### Original release notes (designed as "v1.0.0", shipped as v0.1.0)
 
 ZAC is a binary container for Groth16 BN254 zk-SNARK artifacts, plus a
 Rust library and CLI that work with them. The motivation was simple:

@@ -195,6 +195,28 @@ non-canonical representations whose integer ≥ Fq modulus (E010);
 off-curve points (E010); points outside the prime-order subgroup (E011);
 inconsistent infinity flag (E010).
 
+### 7.1 Identity Rejection (v1.0.1)
+
+The Groth16 pairing equation `e(pi_a, pi_b) = e(alpha_g1, beta_g2) ·
+e(sum_IC, gamma_g2) · e(pi_c, delta_g2)` admits trivial solutions when
+any of `pi_a, pi_b, pi_c, alpha_g1, beta_g2, gamma_g2, delta_g2` is the
+identity (point at infinity). At those seven positions a verifier MUST
+reject `infinity_flag == 1` as **E018** (`IdentityNotAllowed`) before
+the pairing computation.
+
+Rejection is checked at decode time, BEFORE subgroup membership (E011).
+The identity is, mathematically, a member of every subgroup; checking
+subgroup-first would mask the soundness vector behind a valid Ok at the
+group-membership layer.
+
+Identity is **permitted** on `gamma_abc_g1[i]` for any `i`. The sparse
+VKEY pattern legitimately produces zero IC coefficients when the
+corresponding linear-combination term is unused by the circuit (a
+real-world occurrence for circuits whose public input layout is wider
+than the actual constraint usage); rejecting identity here would break
+interoperability with conforming producers such as `snarkjs` and
+`ark-circom`.
+
 ## 8. Field Element Encoding (Fr Public Inputs)
 
 Each public input is 32 B LE in `[0, r)` where `r =
@@ -233,8 +255,16 @@ decimal Fr values. No normative requirements bind snarkjs.
 | E015 | TruncatedInput           | Read past EOF or size exceeds file         |
 | E016 | MissingMandatorySection  | A `Req: M` section in §5 is not in index   |
 | E017 | ProofRejected            | Proof structurally valid but the Groth16 pairing equation does not hold |
+| E018 | IdentityNotAllowed       | Identity at a forbidden position (§7.1)    |
 
-Vendors MAY emit `V***` codes but MUST NOT redefine `E001..E017`.
+Vendors MAY emit `V***` codes but MUST NOT redefine `E001..E018`.
+
+Implementations MUST map input-length-exhaustion conditions (the
+underlying deserializer ran out of bytes mid-element) to **E015**, not
+E010. E010 is reserved for *malformed* encodings (non-canonical x,
+forbidden flag combinations, off-curve), where the bytes were complete
+but their content broke the encoding invariant. Confusing the two
+hides truncation attacks behind a generic "bad point" diagnostic.
 
 ## 11. Versioning Policy
 

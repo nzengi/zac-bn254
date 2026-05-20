@@ -4,7 +4,7 @@
 //! section type, byte index) so a hex-dump + the error message is enough to
 //! diagnose any failure without re-running with a debugger.
 //!
-//! Every variant maps 1:1 to one of the spec-defined codes E001..E017 via
+//! Every variant maps 1:1 to one of the spec-defined codes E001..E018 via
 //! [`ZacError::code`]. Variants are constructed by the parser modules and
 //! flow back to the caller through [`ZacResult`].
 
@@ -195,10 +195,29 @@ pub enum ZacError {
         /// or upstream arkworks error).
         reason: &'static str,
     },
+
+    /// E018: Group element is the identity (point at infinity) at a position
+    /// where SPEC §7 forbids it. Identity is rejected on proof points
+    /// (`pi_a`, `pi_b`, `pi_c`) and on the seven mandatory VK points
+    /// (`alpha_g1`, `beta_g2`, `gamma_g2`, `delta_g2`). Identity is **allowed**
+    /// on `gamma_abc_g1[i]` (sparse-VKEY pattern, SPEC §6.3) and is therefore
+    /// never raised for that path. Rejecting identity at decode-time closes a
+    /// Groth16 soundness anti-pattern: the pairing equation is trivially
+    /// satisfied when an identity is substituted for a real proof element,
+    /// so a downstream that omits a pre-check could accept a forged proof.
+    #[error("E018 IdentityNotAllowed at offset {offset}: {what}")]
+    IdentityNotAllowed {
+        /// Offset where the rejected identity point was read.
+        offset: usize,
+        /// Label of the rejected position
+        /// (`"pi_a"`, `"pi_b"`, `"pi_c"`, `"vk.alpha_g1"`, `"vk.beta_g2"`,
+        /// `"vk.gamma_g2"`, `"vk.delta_g2"`).
+        what: &'static str,
+    },
 }
 
 impl ZacError {
-    /// Returns the spec-level error code (`"E001".."E017"`) for this variant.
+    /// Returns the spec-level error code (`"E001".."E018"`) for this variant.
     ///
     /// Returns `"E000"` for the catch-all `Io` variant which has no spec
     /// counterpart.
@@ -222,6 +241,7 @@ impl ZacError {
             ZacError::Truncated { .. } => "E015",
             ZacError::MissingMandatorySection { .. } => "E016",
             ZacError::ProofRejected { .. } => "E017",
+            ZacError::IdentityNotAllowed { .. } => "E018",
         }
     }
 
@@ -303,6 +323,10 @@ impl ZacError {
             "E017" => ZacError::ProofRejected {
                 reason: "placeholder",
             },
+            "E018" => ZacError::IdentityNotAllowed {
+                offset: 0,
+                what: "placeholder",
+            },
             _ => return None,
         })
     }
@@ -316,7 +340,7 @@ mod tests {
     fn every_code_round_trips() {
         for c in [
             "E001", "E002", "E003", "E004", "E005", "E006", "E007", "E008", "E009", "E010", "E011",
-            "E012", "E013", "E014", "E015", "E016", "E017",
+            "E012", "E013", "E014", "E015", "E016", "E017", "E018",
         ] {
             let err = ZacError::from_e_code(c).expect("known code");
             assert_eq!(err.code(), c);
