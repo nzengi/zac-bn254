@@ -1,19 +1,23 @@
 [package]
 name        = "zac-cli"
-description = "ZAC command-line tool — prove / verify / inspect Groth16 BN254 artifacts."
+description = "Command-line tool for the zac-bn254 Groth16 BN254 toolchain. Provides prove, verify, inspect, pack, and hash subcommands."
 version.workspace      = true
 edition.workspace      = true
 license.workspace      = true
 authors.workspace      = true
 rust-version.workspace = true
 repository.workspace   = true
+homepage.workspace     = true
+readme.workspace       = true
+keywords.workspace     = true
+categories.workspace   = true
 
 [[bin]]
 name = "zac"
 path = "src/main.rs"
 
 [dependencies]
-zac      = { path = "../zac" }
+zac      = { path = "../zac", version = "0.1.0", package = "zac-bn254" }
 clap.workspace               = true
 anyhow.workspace             = true
 tracing-subscriber.workspace = true

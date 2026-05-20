@@ -1,12 +1,20 @@
 [package]
-name         = "zac"
-description  = "ZAC — Groth16 BN254 artifact container (v1.0)."
+name        = "zac-bn254"
+description = "Binary container format and verifier for Groth16 BN254 zk-SNARK proofs. Native Rust prover, snarkjs-compatible."
 version.workspace      = true
 edition.workspace      = true
 license.workspace      = true
 authors.workspace      = true
 rust-version.workspace = true
 repository.workspace   = true
+homepage.workspace     = true
+readme.workspace       = true
+keywords.workspace     = true
+categories.workspace   = true
+
+[lib]
+name = "zac"
+path = "src/lib.rs"
 
 [dependencies]
 byteorder.workspace     = true

@@ -1,14 +1,11 @@
 # zac-bn254
 
+[![Crates.io](https://img.shields.io/crates/v/zac-bn254.svg)](https://crates.io/crates/zac-bn254)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
+
 A binary container format and Rust toolchain for Groth16 BN254
 zk-SNARK proofs. Built so that a verifier does not have to ship
 snarkjs and a Node runtime alongside it.
-
-> **Proprietary software — prior written permission required for any
-> use, copy, fork, derivative work, or AI/ML ingestion. See
-> [`LICENSE`](./LICENSE).** Visibility of this repository on GitHub
-> is not a grant of any rights. Reach out at
-> `zenginureddin1@gmail.com` if you have a use case in mind.
 
 ## Why
 
@@ -25,7 +22,21 @@ container by hash. The library parses both, verifies in roughly 3 ms
 on a multiplier circuit, and proves natively in 1.16 ms without
 shelling out. snarkjs cross-verifies the result.
 
-## Quick start
+## Install
+
+As a library, from crates.io:
+
+```
+cargo add zac-bn254
+```
+
+As the CLI tool:
+
+```
+cargo install zac-cli
+```
+
+Or build from source:
 
 ```
 cargo build --release --bin zac
@@ -150,7 +161,7 @@ to need it; a SHA-256 circuit would benefit.
 
 ```
 cargo build --release            # produces target/release/zac
-cargo test -p zac                # 28 tests including the 60k-case proptest
+cargo test -p zac-bn254          # 28 tests including the 60k-case proptest
 cargo bench                      # parse / verify / prove benches
 ```
 
@@ -174,14 +185,37 @@ implementation in `crates/zac/` is one realization of it; if you
 want to write a Go or TypeScript verifier, the spec is what you
 read, not the Rust source.
 
+## Contributing
+
+Contributions are welcome. The workflow is:
+
+1. Open an issue first for anything larger than a one-line fix, so we
+   can sort out direction before code is written.
+2. PRs need to keep the test suite green, pass `cargo fmt` and
+   `cargo clippy -- -D warnings`, and not regress the cross-verify
+   step against snarkjs.
+3. Every commit needs a `Signed-off-by:` trailer per the Developer
+   Certificate of Origin (`git commit -s`). See [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+   for the full text and rationale.
+
+By submitting a contribution, you agree it is licensed under the same
+dual MIT / Apache-2.0 terms as the rest of the project.
+
 ## License
 
-Proprietary. All rights reserved. The repository being visible on
-GitHub does not grant any license to use, copy, fork, mirror,
-distribute, modify, or otherwise deal with the software, and it does
-not permit ingestion of this code or its documentation by any AI or
-ML system, whether for training, fine-tuning, evaluation, retrieval,
-or inference. Use of any kind — commercial, academic, personal, or
-exploratory — requires prior written permission. The full terms are
-in [`LICENSE`](./LICENSE). For permission requests, write to
-`zenginureddin1@gmail.com`.
+Dual-licensed under either of:
+
+- MIT license ([`LICENSE-MIT`](./LICENSE-MIT) or
+  <https://opensource.org/licenses/MIT>)
+- Apache License, Version 2.0 ([`LICENSE-APACHE`](./LICENSE-APACHE) or
+  <https://www.apache.org/licenses/LICENSE-2.0>)
+
+at your option. This is the same dual-license arrangement used by the
+Rust standard library, tokio, serde, arkworks, and most of the
+Rust ZK ecosystem, which keeps downstream license-compatibility
+hassle-free.
+
+Unless you explicitly state otherwise, any contribution intentionally
+submitted for inclusion in this work by you, as defined in the
+Apache-2.0 license, shall be dual-licensed as above, without any
+additional terms or conditions.

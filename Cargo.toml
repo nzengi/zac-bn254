@@ -5,8 +5,7 @@ members  = ["crates/zac", "crates/zac-cli"]
 [workspace.package]
 version      = "0.1.0"
 edition      = "2021"
-license      = "LicenseRef-Proprietary"
-publish      = false
+license      = "MIT OR Apache-2.0"
 authors      = ["nzengi <zenginureddin1@gmail.com>"]
 # MSRV — verified via `cargo +1.89 check --workspace`. The 1.74 claim that
 # preceded Phase 5 was aspirational: transitive deps (clap_lex 1.1.0) require
@@ -15,6 +14,10 @@ authors      = ["nzengi <zenginureddin1@gmail.com>"]
 # is the floor we commit to in CI.
 rust-version = "1.89"
 repository   = "https://github.com/nzengi/zac-bn254"
+homepage     = "https://github.com/nzengi/zac-bn254"
+readme       = "README.md"
+keywords     = ["zk-snark", "groth16", "bn254", "cryptography", "zero-knowledge"]
+categories   = ["cryptography", "encoding", "command-line-utilities"]
 
 [workspace.dependencies]
 # binary I/O

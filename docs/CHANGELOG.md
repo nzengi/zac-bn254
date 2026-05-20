@@ -1,5 +1,47 @@
 # Changelog
 
+## v1.0.1 — 2026-05-20
+
+Relicensed under MIT OR Apache-2.0 and prepared for publication on
+crates.io. No code or wire-format changes — the library, CLI, and SPEC
+are byte-identical to v1.0.0.
+
+The earlier proprietary terms had a defensible purpose, but they were
+the wrong call for what the project is actually for. The point of a
+Rust-native Groth16 toolchain is to give the rest of the ZK ecosystem
+a real alternative to the snarkjs / Node sidecar pattern, and an
+ecosystem cannot adopt something it cannot legally vendor. So the
+license is now the same dual MIT / Apache-2.0 arrangement that rustc,
+tokio, serde, arkworks, halo2, and plonky2 all use, and the workspace
+is publishable.
+
+Concrete changes:
+
+- `LICENSE` replaced with `LICENSE-MIT` and `LICENSE-APACHE` at the
+  repository root.
+- Workspace `Cargo.toml`: `license = "MIT OR Apache-2.0"`, the
+  `publish = false` flag removed, plus the metadata crates.io
+  requires (`homepage`, `readme`, `keywords`, `categories`).
+- The library crate, previously named `zac` inside the workspace,
+  is now `zac-bn254` on crates.io. The library import name stays
+  `zac`, so downstream code keeps writing `use zac::verify;` —
+  the package rename is invisible at the source level. The CLI
+  crate stays as `zac-cli` and produces a binary called `zac`.
+- `deny.toml`: dropped the `LicenseRef-Proprietary` allow entry and
+  the `private.ignore = true` exemption that was paired with it.
+  The remaining license allowlist is unchanged.
+- `CONTRIBUTING.md` added at the repository root, with DCO sign-off
+  as the contribution mechanism.
+- `README.md`: replaced the proprietary banner and license section
+  with a dual-license note and a contribution pointer. Install
+  instructions now lead with `cargo add zac-bn254` and
+  `cargo install zac-cli`.
+
+The proprietary banner protected against AI ingestion explicitly. The
+dual license does not. That is a trade-off I am making deliberately
+in exchange for the project being something a downstream Rust ZK
+project can actually adopt.
+
 ## v1.0.0 — 2026-05-20
 
 First public release of ZAC.
@@ -161,7 +203,7 @@ not the bottleneck — pairing dominates verify, MSM dominates prove.
 ### Build status at release
 
 ```
-cargo test -p zac                           # 28 passing
+cargo test -p zac-bn254                     # 28 passing
 cargo bench                                 # parse / verify / prove green
 cargo audit                                 # 3 transitive, all ignored with rationale
 cargo deny --all-features check             # clean
