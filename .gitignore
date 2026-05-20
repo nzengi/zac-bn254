@@ -1,0 +1,6 @@
+/target
+Cargo.lock
+/fixtures/*.zkey
+/fixtures/*.wtns
+/node-tools/node_modules
+/node-tools/package-lock.json

@@ -1,0 +1,100 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+  # The rust-toolchain.toml at workspace root pins a stable channel; the
+  # individual jobs override via `dtolnay/rust-toolchain` where they need
+  # a different one (msrv, nightly fuzz).
+  # Lowest Rust the workspace builds on (verified locally via
+  # `cargo +1.89 check --workspace`). Bump only after re-verifying.
+  ZAC_MSRV: "1.89.0"
+
+jobs:
+  lint:
+    name: lint (fmt + clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo fmt --check
+        run: cargo fmt --all --check
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo test
+        run: cargo test --workspace
+
+  msrv:
+    name: msrv (${{ env.ZAC_MSRV }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # rust-toolchain.toml would otherwise force the pinned channel; bypass
+      # it for the MSRV lane.
+      - run: rm -f rust-toolchain.toml
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.ZAC_MSRV }}
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo check (MSRV)
+        run: cargo check --workspace
+
+  audit:
+    name: audit (advisories)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: cargo audit
+        run: cargo audit
+
+  deny:
+    name: deny (licenses + sources + advisories)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: install cargo-deny
+        run: cargo install cargo-deny --locked
+      - name: cargo deny check
+        run: cargo deny --all-features check
+
+  e2e:
+    name: e2e (snarkjs cross-verify)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: install snarkjs deps
+        working-directory: node-tools
+        run: npm ci
+      - name: e2e demo
+        run: bash scripts/e2e_demo.sh
+      - name: cross-verify (snarkjs vs zac)
+        working-directory: node-tools
+        run: npm run cross-verify

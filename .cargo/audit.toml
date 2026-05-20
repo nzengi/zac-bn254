@@ -1,0 +1,21 @@
+# cargo-audit configuration for the ZAC workspace.
+#
+# Mirror of the [advisories.ignore] block in deny.toml. The rationale for
+# each ignore is documented there in full; in short:
+#
+#   RUSTSEC-2025-0055 — `tracing-subscriber 0.2.25` ANSI poisoning,
+#       transitive via `ark-relations 0.4.0`. Not exploitable in ZAC
+#       because no user input ever reaches the 0.2.25 logger.
+#   RUSTSEC-2024-0388 — `derivative 2.2.0` unmaintained, transitive via
+#       arkworks. No safe upgrade in the ark 0.4 line.
+#   RUSTSEC-2024-0436 — `paste 1.0.15` unmaintained, transitive via
+#       ark-ff. No safe upgrade.
+#
+# All three are tracked for v2 (arkworks 0.5+ migration).
+
+[advisories]
+ignore = [
+    "RUSTSEC-2025-0055",
+    "RUSTSEC-2024-0388",
+    "RUSTSEC-2024-0436",
+]

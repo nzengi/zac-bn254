@@ -1,0 +1,14 @@
+{
+  "name": "zac-node-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "snarkjs harness for ZAC interop fixtures and cross-verify scripts (Phase 3+).",
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/build_fixtures.mjs",
+    "cross-verify": "node scripts/cross_verify.mjs"
+  },
+  "dependencies": {
+    "snarkjs": "^0.7.5"
+  }
+}

@@ -1,0 +1,25 @@
+[package]
+name        = "zac-cli"
+description = "ZAC command-line tool — prove / verify / inspect Groth16 BN254 artifacts."
+version.workspace      = true
+edition.workspace      = true
+license.workspace      = true
+authors.workspace      = true
+rust-version.workspace = true
+repository.workspace   = true
+
+[[bin]]
+name = "zac"
+path = "src/main.rs"
+
+[dependencies]
+zac      = { path = "../zac" }
+clap.workspace               = true
+anyhow.workspace             = true
+tracing-subscriber.workspace = true
+hex.workspace                = true
+rand.workspace               = true
+rand_chacha.workspace        = true
+
+[dev-dependencies]
+tempfile.workspace = true

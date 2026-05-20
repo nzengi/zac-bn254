@@ -1,0 +1,71 @@
+# cargo-deny configuration for the ZAC workspace.
+#
+# Policy choices:
+#   * licenses — allow only audited permissive / public-domain licenses.
+#   * advisories.yanked = "deny" — refuse builds that pin a yanked crate.
+#   * sources — registry must be the official crates.io index; no git deps.
+#   * bans.multiple-versions = "warn" — informational; arkworks dependency
+#     graph routinely ships duplicate semver-compat versions (e.g. `syn 1`
+#     pulled through ark-ff-asm vs `syn 2` through clap_derive). Pinning
+#     them out is upstream's responsibility, not the workspace's.
+#
+# ## Advisory ignores (Phase 5 audit)
+#
+# Three advisories are explicitly ignored and the rationale documented in
+# the [advisories.ignore] block below. All three are transitive through
+# arkworks 0.4, which is locked to the v1.0 spec scope ("Groth16 over
+# BN254" — bumping to ark 0.5 is a v2 task, not a Phase 5 task).
+
+[graph]
+all-features = true
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "CC0-1.0",
+    "Zlib",
+    "BSD-2-Clause",
+    "MPL-2.0",
+]
+confidence-threshold = 0.93
+
+[advisories]
+yanked = "deny"
+ignore = [
+    # RUSTSEC-2025-0055 — `tracing-subscriber 0.2.25` ANSI poisoning.
+    # Transitive via `ark-relations 0.4.0`. The advisory's threat model
+    # requires untrusted user input to reach a `tracing-subscriber` log
+    # writer. In ZAC, no `.zac`/`.zacp`/`.zkey`/`.wtns` bytes are ever
+    # passed to `tracing-subscriber 0.2`; our binary initialises only
+    # `tracing-subscriber 0.3.23` (zac-cli/src/main.rs::init_tracing).
+    # The transitive 0.2.25 instance is reachable only through arkworks
+    # internal `tracing::span!` calls in constraint-system code, which
+    # never receives attacker-controlled bytes. Re-evaluate when v2
+    # bumps arkworks to >=0.5.
+    "RUSTSEC-2025-0055",
+    # RUSTSEC-2024-0388 — `derivative 2.2.0` unmaintained. Transitive
+    # via ark-{ff,ec,poly,crypto-primitives}. No safe upgrade exists in
+    # the arkworks 0.4 line. Source-reviewed; no known soundness or
+    # security defect, only a maintenance-status notice. Tracked for v2.
+    "RUSTSEC-2024-0388",
+    # RUSTSEC-2024-0436 — `paste 1.0.15` unmaintained. Transitive via
+    # ark-ff. Same situation as derivative: no functional defect, only
+    # a maintenance notice from upstream. Tracked for v2.
+    "RUSTSEC-2024-0436",
+]
+
+[bans]
+multiple-versions = "warn"
+wildcards         = "allow"     # zac-cli depends on `zac` via path = "..", which deny flags as a wildcard
+
+[sources]
+unknown-registry = "deny"
+unknown-git      = "deny"
+allow-registry   = ["https://github.com/rust-lang/crates.io-index"]
+allow-git        = []

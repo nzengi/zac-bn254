@@ -1,0 +1,64 @@
+[workspace]
+resolver = "2"
+members  = ["crates/zac", "crates/zac-cli"]
+
+[workspace.package]
+version      = "0.1.0"
+edition      = "2021"
+license      = "MIT"
+authors      = ["nzengi <zenginureddin1@gmail.com>"]
+# MSRV — verified via `cargo +1.89 check --workspace`. The 1.74 claim that
+# preceded Phase 5 was aspirational: transitive deps (clap_lex 1.1.0) require
+# the `edition2024` Cargo feature, which is only stable from Rust 1.85.
+# 1.89 is the lowest installed toolchain that builds the workspace clean and
+# is the floor we commit to in CI.
+rust-version = "1.89"
+repository   = "https://github.com/nzengi/zac"
+
+[workspace.dependencies]
+# binary I/O
+byteorder = "1"
+
+# crypto
+blake3 = "1"
+
+# arkworks — Groth16 BN254 only (v1.0 scope)
+ark-bn254     = "0.4"
+ark-groth16   = "0.4"
+ark-ec        = "0.4"
+ark-ff        = "0.4"
+ark-poly      = "0.4"
+ark-serialize = "0.4"
+ark-relations = "0.4"
+ark-snark     = "0.4"
+ark-std       = "0.4"
+
+# randomness
+rand         = { version = "0.8", features = ["getrandom"] }
+rand_chacha  = "0.3"
+
+# error + observability
+thiserror          = "1"
+anyhow             = "1"
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# encoding
+hex       = "0.4"
+crc32fast = "1"
+
+# cli
+clap = { version = "4", features = ["derive"] }
+
+# dev / bench
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest  = "1"
+tempfile  = "3"
+
+[profile.release]
+debug         = true   # Phase 0 ilkesi: release build'lerde de debug info; benchmark + profiling kolay olsun.
+lto           = "thin"
+codegen-units = 1
+
+[profile.bench]
+inherits = "release"
